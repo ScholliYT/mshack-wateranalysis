@@ -6,19 +6,6 @@
 OneWire oneWire(TemperatureSensorPin);
 DallasTemperature sensors(&oneWire);
 
-void readTurbidity()
-{
-  int sensorValue = analogRead(TurbiditySensorPin);                               // read the input on analog pin 0:
-  float voltage = sensorValue * (5.0 / 1024.0);                                   // Convert the analog reading (which goes from 0 - 1023) to a voltage (0 - 5V):
-  float turbidityValue = -1120.4 * voltage * voltage + 5742.3 * voltage - 4352.9; // -1120.4*x^2 + 5742.3*x - 4352.9
-
-  Serial.print("Turbidity voltage: ");
-  Serial.print(voltage);
-  Serial.print(" Turbidity value: ");
-  Serial.print(turbidityValue);
-  Serial.println(" NTU");
-}
-
 void readPH()
 {
   int sensorValue = analogRead(PHSensorPin);
@@ -62,7 +49,6 @@ void setup()
   Serial.println("MSHack19 Wateranalysis");
 
   pinMode(PHSensorPin, INPUT);
-  pinMode(TurbiditySensorPin, INPUT);
   pinMode(ConductivitySensorPin, INPUT);
   pinMode(TemperatureSensorPin, INPUT);
 
@@ -71,7 +57,6 @@ void setup()
 
 void loop()
 {
-  readTurbidity();
   readPH();
   readConductivity();
   readTemperature();
@@ -79,5 +64,5 @@ void loop()
   Serial.println();
   Serial.println();
 
-  delay(2000);
+  delay(500);
 }

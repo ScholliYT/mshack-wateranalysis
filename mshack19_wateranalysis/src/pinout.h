@@ -1,6 +1,5 @@
-#define TurbiditySensorPin A0
-#define PHSensorPin A1
+#define PHSensorPin A3
 #define Offset 0.00            //deviation compensate PH Sensor
-#define TemperatureSensorPin A2
-#define ConductivitySensorPin A3
+#define TemperatureSensorPin 10
+#define ConductivitySensorPin A1
 float temperature = 25; // TODO: use reading from Sensor later

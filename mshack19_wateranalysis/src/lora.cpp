@@ -3,22 +3,27 @@
 #include <lmic.h>
 #include <hal/hal.h>
 
-// This EUI must be in little-endian format, so least-significant-byte
-// first. When copying an EUI from ttnctl output, this means to reverse
-// the bytes. For TTN issued EUIs the last bytes should be 0xD5, 0xB3,
-// 0x70.
-static const u1_t PROGMEM APPEUI[8] = { 0x8F, 0x2F, 0x02, 0xD0, 0x7E, 0xD5, 0xB3, 0x70 };
-void os_getArtEui(u1_t *buf) { memcpy_P(buf, APPEUI, 8); }
+// LoRaWAN NwkSKey, network session key
+// This is the default Semtech key, which is used by the early prototype TTN
+// network.
+// Use LSB here
+static const PROGMEM u1_t NWKSKEY[16] = { 0xDD, 0xF4, 0xAB, 0x61, 0xA3, 0x3A, 0x69, 0x23, 0x12, 0xFB, 0xC6, 0x63, 0x61, 0xA4, 0xC6, 0x18 };
 
-// This should also be in little endian format, see above.
-static const u1_t PROGMEM DEVEUI[8] = { 0x80, 0xB7, 0x48, 0xF9, 0x19, 0xC8, 0x55, 0x00 };
-void os_getDevEui(u1_t *buf) { memcpy_P(buf, DEVEUI, 8); }
+// LoRaWAN AppSKey, application session key
+// This is the default Semtech key, which is used by the early prototype TTN
+// network.
+// Use LSB here
+static const u1_t PROGMEM APPSKEY[16] = { 0x86, 0x7D, 0x8B, 0x19, 0x21, 0x3F, 0xB1, 0xCD, 0x10, 0x02, 0xDB, 0xC3, 0xAC, 0x38, 0x0B, 0x06 };
 
-// This key should be in big endian format (or, since it is not really a
-// number but a block of memory, endianness does not really apply). In
-// practice, a key taken from ttnctl can be copied as-is.
-static const u1_t PROGMEM APPKEY[16] = { 0x7D, 0xB6, 0xC2, 0xCF, 0x3A, 0x77, 0x6E, 0x9D, 0x31, 0xA5, 0x4E, 0xD1, 0x88, 0x8F, 0x73, 0xC1 };
-void os_getDevKey(u1_t *buf) { memcpy_P(buf, APPKEY, 16); }
+// LoRaWAN end-device address (DevAddr)
+static const u4_t DEVADDR = 0x2601175D; // <-- Change this address for every node!
+
+// These callbacks are only used in over-the-air activation, so they are
+// left empty here (we cannot leave them out completely unless
+// DISABLE_JOIN is set in config.h, otherwise the linker will complain).
+void os_getArtEui (u1_t* buf) { }
+void os_getDevEui (u1_t* buf) { }
+void os_getDevKey (u1_t* buf) { }
 
 static osjob_t sendjob;
 uint8_t sensorvalues[9];
@@ -125,13 +130,69 @@ void setup_lora(long tx_interval_ms)
 {
   TX_INTERVAL_SEC = tx_interval_ms / 1000;
   
-  // LMIC init
-  os_init();
-  // Reset the MAC state. Session and pending data transfers will be discarded.
-  LMIC_reset();
+   // LMIC init
+    os_init();
+    // Reset the MAC state. Session and pending data transfers will be discarded.
+    LMIC_reset();
 
-  // Start job (sending automatically starts OTAA too)
-  do_send(&sendjob);
+    // Set static session parameters. Instead of dynamically establishing a session
+    // by joining the network, precomputed session parameters are be provided.
+    #ifdef PROGMEM
+    // On AVR, these values are stored in flash and only copied to RAM
+    // once. Copy them to a temporary buffer here, LMIC_setSession will
+    // copy them into a buffer of its own again.
+    uint8_t appskey[sizeof(APPSKEY)];
+    uint8_t nwkskey[sizeof(NWKSKEY)];
+    memcpy_P(appskey, APPSKEY, sizeof(APPSKEY));
+    memcpy_P(nwkskey, NWKSKEY, sizeof(NWKSKEY));
+    LMIC_setSession (0x1, DEVADDR, nwkskey, appskey);
+    #else
+    // If not running an AVR with PROGMEM, just use the arrays directly
+    LMIC_setSession (0x1, DEVADDR, NWKSKEY, APPSKEY);
+    #endif
+
+    #if defined(CFG_eu868)
+    // Set up the channels used by the Things Network, which corresponds
+    // to the defaults of most gateways. Without this, only three base
+    // channels from the LoRaWAN specification are used, which certainly
+    // works, so it is good for debugging, but can overload those
+    // frequencies, so be sure to configure the full frequency range of
+    // your network here (unless your network autoconfigures them).
+    // Setting up channels should happen after LMIC_setSession, as that
+    // configures the minimal channel set.
+    // NA-US channels 0-71 are configured automatically
+    LMIC_setupChannel(0, 868100000, DR_RANGE_MAP(DR_SF12, DR_SF7),  BAND_CENTI);      // g-band
+    LMIC_setupChannel(1, 868300000, DR_RANGE_MAP(DR_SF12, DR_SF7B), BAND_CENTI);      // g-band
+    LMIC_setupChannel(2, 868500000, DR_RANGE_MAP(DR_SF12, DR_SF7),  BAND_CENTI);      // g-band
+    LMIC_setupChannel(3, 867100000, DR_RANGE_MAP(DR_SF12, DR_SF7),  BAND_CENTI);      // g-band
+    LMIC_setupChannel(4, 867300000, DR_RANGE_MAP(DR_SF12, DR_SF7),  BAND_CENTI);      // g-band
+    LMIC_setupChannel(5, 867500000, DR_RANGE_MAP(DR_SF12, DR_SF7),  BAND_CENTI);      // g-band
+    LMIC_setupChannel(6, 867700000, DR_RANGE_MAP(DR_SF12, DR_SF7),  BAND_CENTI);      // g-band
+    LMIC_setupChannel(7, 867900000, DR_RANGE_MAP(DR_SF12, DR_SF7),  BAND_CENTI);      // g-band
+    LMIC_setupChannel(8, 868800000, DR_RANGE_MAP(DR_FSK,  DR_FSK),  BAND_MILLI);      // g2-band
+    // TTN defines an additional channel at 869.525Mhz using SF9 for class B
+    // devices' ping slots. LMIC does not have an easy way to define set this
+    // frequency and support for class B is spotty and untested, so this
+    // frequency is not configured here.
+    #elif defined(CFG_us915)
+    // NA-US channels 0-71 are configured automatically
+    // but only one group of 8 should (a subband) should be active
+    // TTN recommends the second sub band, 1 in a zero based count.
+    // https://github.com/TheThingsNetwork/gateway-conf/blob/master/US-global_conf.json
+    LMIC_selectSubBand(1);
+    #endif
+
+    // Disable link check validation
+    LMIC_setLinkCheckMode(0);
+
+    // TTN uses SF9 for its RX2 window.
+    LMIC.dn2Dr = DR_SF9;
+
+    // Set data rate and transmit power for uplink (note: txpow seems to be ignored by the library)
+    LMIC_setDrTxpow(DR_SF10,14);
+
+    // Start job
+    do_send(&sendjob);
 }
 
 void loop_lora()

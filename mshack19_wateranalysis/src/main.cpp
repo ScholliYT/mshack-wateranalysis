@@ -6,7 +6,7 @@
 
 #define SAMPLE_SIZE 3
 #define MEASUREMENT_DELAY 20
-#define SAMPLE_DELAY 60000
+#define SAMPLE_DELAY 20000
 
 OneWire oneWire(TemperatureSensorPin);
 DallasTemperature sensors(&oneWire);
@@ -98,14 +98,14 @@ void setup()
   pinMode(ConductivitySensorPin, INPUT);
   pinMode(TemperatureSensorPin, INPUT);
 
-  setup_lora(SAMPLE_DELAY);
-
   sensors.begin(); // Start up the library for temperature reading
+
+  setup_lora(SAMPLE_DELAY);
 }
 
 void loop()
 {
-  if (millis() - lastSampleTime > SAMPLE_DELAY || lastSampleTime == 0)
+  if (millis() - lastSampleTime > SAMPLE_DELAY)
   {
     takeMeasurements();
 

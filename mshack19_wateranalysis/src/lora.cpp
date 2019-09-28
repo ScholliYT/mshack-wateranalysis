@@ -136,7 +136,7 @@ void setup_lora(long tx_interval_ms)
 
 void loop_lora()
 {
-    os_runloop_once();
+  os_runloop_once();
 }
 
 void queue_package(float phValue, float conductivityValue, float temperatureValue)

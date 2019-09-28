@@ -17,7 +17,7 @@ void os_getDevEui(u1_t *buf) { memcpy_P(buf, DEVEUI, 8); }
 // This key should be in big endian format (or, since it is not really a
 // number but a block of memory, endianness does not really apply). In
 // practice, a key taken from ttnctl can be copied as-is.
-static const u1_t PROGMEM APPKEY[16] = { 0x7D, 0xB6, 0xC2, 0xCF, 0x3A, 0x77, 0x6E, 0x9D, 0x31, 0xA5, 0x4E, 0xD1, 0x88, 0x8F, 0x73, 0xC1 };
+static const u1_t PROGMEM APPKEY[16] = { 0x94, 0x2B, 0xB4, 0xD2, 0x11, 0x08, 0xFB, 0x9B, 0x07, 0x02, 0xED, 0x91, 0x4F, 0x5A, 0x75, 0x49 };
 void os_getDevKey(u1_t *buf) { memcpy_P(buf, APPKEY, 16); }
 
 static osjob_t sendjob;

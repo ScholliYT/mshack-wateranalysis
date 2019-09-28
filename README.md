@@ -13,6 +13,12 @@ Controllerboard: LoRa Mini 868 MHz
 | Wassertemperatur     | DS18b20       |
 
 
-![img_side](docs/img/IMG_20190928_154446.jpg)
+### Dashboard
+![dashboard](docs/img/dashboard.png)
+Das dashboard ist [hier](https://mshack.lorawan.digital/team5/ui/) verfügbar.
 
-![img_in_water](docs/img/IMG_20190928_154717.jpg)
+### Prototyp
+
+![img_side](docs/img/side_view.jpg)
+
+![img_in_water](docs/img/in_water.jpg)

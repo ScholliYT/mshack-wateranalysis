@@ -11,3 +11,8 @@ Controllerboard: LoRa Mini 868 MHz
 | PH-Wert              | SEN0161(Test); SEN0169 (später für Prod – 1 Jahr Daueraußenbetrieb möglich) |
 | Leitwertsensor       | SEN0244       |
 | Wassertemperatur     | DS18b20       |
+
+
+![img_side](docs/img/IMG_20190928_154446.jpg)
+
+![img_in_water](docs/img/IMG_20190928_154717.jpg)

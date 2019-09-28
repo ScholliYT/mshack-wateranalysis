@@ -142,7 +142,7 @@ void loop_lora()
 void queue_package(float phValue, float conductivityValue, float temperatureValue)
 {
   uint16_t phValueInt = phValue * 100;
-  uint16_t conductivityValueInt = conductivityValue;
+  uint16_t conductivityValueInt = conductivityValue * 10;
   uint16_t temperatureValueInt = temperatureValue * 100;
 
   int i = 0;

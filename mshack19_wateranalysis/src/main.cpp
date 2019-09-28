@@ -3,10 +3,19 @@
 #include <OneWire.h>
 #include <DallasTemperature.h>
 
+#define SAMPLE_SIZE 3
+#define MEASUREMENT_DELAY 20
+#define SAMPLE_DELAY 500
+
 OneWire oneWire(TemperatureSensorPin);
 DallasTemperature sensors(&oneWire);
 
-void readPH()
+float phArray[SAMPLE_SIZE];
+float ConductivityArray[SAMPLE_SIZE];
+
+float phValue, conductivityValue, temperatureValue;
+
+float getPHValue()
 {
   int sensorValue = analogRead(PHSensorPin);
   float voltage = sensorValue * (5.0 / 1024.0);
@@ -16,9 +25,10 @@ void readPH()
   Serial.print(voltage);
   Serial.print(" PH value: ");
   Serial.println(pHValue);
+  return phValue;
 }
 
-void readConductivity()
+float getConductivityValue()
 {
   int sensorValue = analogRead(ConductivitySensorPin);
   float voltage = sensorValue * (5.0 / 1024.0);
@@ -31,9 +41,11 @@ void readConductivity()
   Serial.print(" Conductivity value: ");
   Serial.print(conductivityValue);
   Serial.println(" ppm");
+
+  return conductivityValue;
 }
 
-void readTemperature()
+float getTemperature()
 {
   sensors.requestTemperatures();
   float temperature = sensors.getTempCByIndex(0);
@@ -41,12 +53,33 @@ void readTemperature()
   Serial.print("Temperature: ");
   Serial.print(temperature);
   Serial.println(" C");
+
+  return temperature;
+}
+
+float avgArray(float values[], int size) {
+  float sum = 0;
+  for(int i = 0; i < size; i++) {
+    sum += values[i];
+  }
+  return (sum/size);
+}
+
+void takeMeasurements() {
+  for (int i = 0; i < SAMPLE_SIZE; i++) {
+    phArray[i] = getPHValue();
+    ConductivityArray[i] = getConductivityValue();
+
+    delay(MEASUREMENT_DELAY);
+  }
 }
 
 void setup()
 {
   Serial.begin(115200);
   Serial.println("MSHack19 Wateranalysis");
+  Serial.print("Taking samples of ");Serial.print(SAMPLE_SIZE);Serial.print(" measurements with a delay of ");
+  Serial.print(MEASUREMENT_DELAY);Serial.print(" ms every ");Serial.print(SAMPLE_DELAY);Serial.println(" ms.");
 
   pinMode(PHSensorPin, INPUT);
   pinMode(ConductivitySensorPin, INPUT);
@@ -57,12 +90,22 @@ void setup()
 
 void loop()
 {
-  readPH();
-  readConductivity();
-  readTemperature();
+  takeMeasurements();
+
+  phValue = avgArray(phArray, SAMPLE_SIZE);
+  conductivityValue = avgArray(ConductivityArray, SAMPLE_SIZE);
+  temperatureValue = getTemperature();
+
+  Serial.println();
+
+  Serial.println("===== SAMPLE =====");
+  Serial.print("PH Value: ");Serial.println(phValue);
+  Serial.print("ConductivityValue: ");Serial.print(conductivityValue);Serial.println(" ppm");
+  Serial.print("TemperatureValue: ");Serial.print(temperatureValue);Serial.println(" C");
 
   Serial.println();
   Serial.println();
 
-  delay(500);
+  delay(SAMPLE_DELAY);
 }
+

@@ -22,3 +22,6 @@ Das dashboard ist [hier](https://mshack.lorawan.digital/team5/ui/) verfügbar.
 ![img_side](docs/img/side_view.jpg)
 
 ![img_in_water](docs/img/in_water.jpg)
+
+
+Weitere Projekte vom Münsterhack gibt es hier: https://github.com/codeformuenster/muensterhack

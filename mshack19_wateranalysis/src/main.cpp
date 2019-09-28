@@ -11,9 +11,6 @@
 OneWire oneWire(TemperatureSensorPin);
 DallasTemperature sensors(&oneWire);
 
-float phArray[SAMPLE_SIZE];
-float ConductivityArray[SAMPLE_SIZE];
-
 float phValue, conductivityValue, temperatureValue;
 static unsigned long lastSampleTime = 0;
 
@@ -21,13 +18,13 @@ float getPHValue()
 {
   int sensorValue = analogRead(PHSensorPin);
   float voltage = sensorValue * (5.0 / 1024.0);
-  float pHValue = 3.5 * voltage + Offset;
+  float pH = 3.5 * voltage + Offset;
 
   Serial.print("PH Voltage: ");
   Serial.print(voltage);
   Serial.print(" PH value: ");
-  Serial.println(pHValue);
-  return phValue;
+  Serial.println(pH);
+  return pH;
 }
 
 float getConductivityValue()
@@ -36,15 +33,15 @@ float getConductivityValue()
   float voltage = sensorValue * (5.0 / 1024.0);
   float compensationCoefficient = 1.0 + 0.02 * (temperatureValue - 25.0);                                                                                                                              //temperature compensation formula: fFinalResult(25^C) = fFinalResult(current)/(1.0+0.02*(fTP-25.0));
   float compensationVolatge = voltage / compensationCoefficient;                                                                                                                                  //temperature compensation
-  float conductivityValue = (133.42 * compensationVolatge * compensationVolatge * compensationVolatge - 255.86 * compensationVolatge * compensationVolatge + 857.39 * compensationVolatge) * 0.5; //convert voltage value to tds value
+  float conductivity = (133.42 * compensationVolatge * compensationVolatge * compensationVolatge - 255.86 * compensationVolatge * compensationVolatge + 857.39 * compensationVolatge) * 0.5; //convert voltage value to tds value
 
   Serial.print("Conductivity Voltage: ");
   Serial.print(voltage);
   Serial.print(" Conductivity value: ");
-  Serial.print(conductivityValue);
+  Serial.print(conductivity);
   Serial.println(" ppm");
 
-  return conductivityValue;
+  return conductivity;
 }
 
 float getTemperature()
@@ -66,19 +63,24 @@ float avgArray(float values[], int size)
   {
     sum += values[i];
   }
-  return (sum / size);
+  return (sum / (float)size);
 }
 
-void takeMeasurements()
-{
-  for (int i = 0; i < SAMPLE_SIZE; i++)
-  {
-    phArray[i] = getPHValue();
-    ConductivityArray[i] = getConductivityValue();
-
-    delay(MEASUREMENT_DELAY);
-  }
-}
+void takeMeasurements() { 
+  temperatureValue = getTemperature(); 
+ 
+  float sumph = 0; 
+  float sumConductivity = 0; 
+  for (int i = 0; i < SAMPLE_SIZE; i++) { 
+    sumph += getPHValue(); 
+    sumConductivity += getConductivityValue(); 
+ 
+    delay(MEASUREMENT_DELAY); 
+  } 
+ 
+  phValue = sumph / (float)SAMPLE_SIZE; 
+  conductivityValue = sumConductivity / (float)SAMPLE_SIZE; 
+} 
 
 void setup()
 {
@@ -105,15 +107,11 @@ void loop()
 {
   if (millis() - lastSampleTime > SAMPLE_DELAY || lastSampleTime == 0)
   {
-    temperatureValue = getTemperature();
-
     takeMeasurements();
-    phValue = avgArray(phArray, SAMPLE_SIZE);
-    conductivityValue = avgArray(ConductivityArray, SAMPLE_SIZE);
 
     Serial.println();
 
-    Serial.println("===== SAMPLE =====");
+    Serial.println("===== Sending this Measurment =====");
     Serial.print("PH Value: ");
     Serial.println(phValue);
     Serial.print("ConductivityValue: ");
